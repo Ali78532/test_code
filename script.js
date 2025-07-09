@@ -14,7 +14,6 @@ const containerEl = document.getElementById('quiz-container');
 const resultBox   = document.getElementById('result-box');
 const scoreEl     = document.getElementById('score');
 
-// جلب محتوى الاختبار وحقنه
 fetch(`tests/${testName}.html`)
   .then(r => {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -23,12 +22,14 @@ fetch(`tests/${testName}.html`)
   .then(html => {
     const temp = document.createElement('div');
     temp.innerHTML = html;
+
     const h1 = temp.querySelector('h1');
     if (h1) {
       titleEl.textContent = h1.textContent;
       document.title    = h1.textContent;
       h1.remove();
     }
+
     containerEl.innerHTML = temp.innerHTML;
     initQuiz();
   })
@@ -47,8 +48,8 @@ function initQuiz() {
       const parent = opt.parentElement;
       if (parent.querySelector('.selected')) return;
 
-      const correct = opt.dataset.correct === 'true';
-      if (correct) {
+      const isCorrect = opt.dataset.correct === 'true';
+      if (isCorrect) {
         correctSoundEl.currentTime = 0;
         correctSoundEl.play();
         opt.classList.add('correct');
@@ -56,16 +57,15 @@ function initQuiz() {
       } else {
         wrongSoundEl.currentTime = 0;
         wrongSoundEl.play();
+        // اهتزاز الهاتف 80ms
+        if (navigator.vibrate) navigator.vibrate(80);
         opt.classList.add('wrong');
         const hint = parent.querySelector('.hint');
         if (hint) hint.style.display = 'block';
       }
 
-      // إظهار الإجابة الصحيحة دائماً
       parent.querySelectorAll('.option').forEach(o => {
-        if (o.dataset.correct === 'true') {
-          o.classList.add('correct');
-        }
+        if (o.dataset.correct === 'true') o.classList.add('correct');
       });
 
       opt.classList.add('selected');
@@ -73,14 +73,13 @@ function initQuiz() {
       scoreEl.textContent = score;
 
       if (answered === containerEl.querySelectorAll('.question-container').length) {
-        resultBox.style.display      = 'block';
+        resultBox.style.display     = 'block';
         showSolutionToggle();
       }
     });
   });
 }
 
-// إنشاء عرض/إخفاء زرًّا ونصًّا بعد النتيجة
 function showSolutionToggle() {
   let toggleDiv = document.getElementById('solution-toggle');
   if (!toggleDiv) {
@@ -99,7 +98,8 @@ function showSolutionToggle() {
 
     hideBtn.addEventListener('click', () => {
       containerEl.style.display = 'none';
-      // لا نخفي النتيجة حتى تبقى ظاهرة
+      // الدرجة تبقى ظاهرة:
+      resultBox.style.display = 'block';
       hideBtn.style.display = 'none';
       msg.style.display     = 'none';
       showBtn.style.display = 'inline-block';
@@ -113,4 +113,4 @@ function showSolutionToggle() {
     });
   }
   toggleDiv.style.display = 'block';
-}
+  }
