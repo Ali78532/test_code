@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>اختبار</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preload" href="Correct.wav" as="audio">
+  <link rel="preload" href="Wrong.wav"   as="audio">
+</head>
+<body>
+
+ <!-- عناصر صوت التحكّم -->
+  <audio id="correct-sound" src="Correct.wav" preload="auto"></audio>
+  <audio id="wrong-sound"   src="Wrong.wav"   preload="auto"></audio>
+
+  <!-- هنا يُحقن عنوان الاختبار -->
+  <h1 id="quiz-title"></h1>
+
+  <!-- هنا يُحقن محتوى الأسئلة -->
+  <div id="quiz-container"></div>
+
+  <!-- صندوق النتيجة المشترك -->
+  <div class="result" id="result-box">درجتك: <span id="score">0</span></div>
+
+  <!-- تحميل السكربت المشترك -->
+  <script src="script.js"></script>
+</body>
+</html>
