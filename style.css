@@ -26,7 +26,7 @@ h1 {
 .question {
   color: #64b5f6;
   font-size: 20px;
-  font-weight: bold;
+  font-weight: normal;
   margin-bottom: 15px;
   line-height: 1.5;
 }
