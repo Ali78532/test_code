@@ -26,7 +26,7 @@ h1 {
 .question {
   color: #64b5f6;
   font-size: 20px;
-  font-weight: bold; /* أصبح سميك */
+  font-weight: bold;
   margin-bottom: 15px;
   line-height: 1.5;
 }
@@ -92,33 +92,27 @@ body::after {
   direction: rtl;
 }
 
-/* تنسيق زرّ الإخفاء/العرض في منتصف الصفحة */
 #solution-toggle {
   text-align: center;
   margin-top: 20px;
 }
-
-/* الأزرار */
 .toggle-btn {
   display: inline-block;
-  margin: 10px;
-  padding: 10px 20px;
-  font-size: 18px;
-  border: 2px solid #fff;
-  border-radius: 8px;
+  margin: 5px;
+  padding: 8px 16px;
+  font-size: 14px;
+  border: 2px solid #555;
+  border-radius: 6px;
   background: transparent;
-  color: #fff;
+  color: #e0e0e0;
   cursor: pointer;
-  transition: background-color 0.3s;
 }
 .toggle-btn:hover {
-  background-color: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.1);
 }
-
-/* نص التوضيح */
 .toggle-msg {
-  text-align: center; /* أصبح في المنتصف */
-  font-size: 16px;
+  text-align: center;
+  font-size: 14px;
   color: #e0e0e0;
   margin: 10px 0;
-  }
+}
