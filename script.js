@@ -13,7 +13,7 @@ const scoreEl     = document.getElementById('score');
 
 function celebrate() {
   const colors = ['#e91e63', '#ffeb3b', '#4caf50', '#2196f3', '#ff9800', '#9c27b0'];
-  const count = 120;
+  const count = 90; // قللنا العدد
 
   for (let i = 0; i < count; i++) {
     const sq = document.createElement('div');
@@ -27,16 +27,19 @@ function celebrate() {
     const h = 4 + Math.random() * 8;
     sq.style.setProperty('--w', w + 'px');
     sq.style.setProperty('--h', h + 'px');
-    if (Math.random() < 0.2) sq.style.setProperty('--round', '50%');
 
     const dx = (Math.random() * 100 - 50) + 'vw';
-    sq.style.setProperty('--dy', window.innerHeight + 200 + 'px');
+    const dy = window.innerHeight + 200 + 'px';
     sq.style.setProperty('--dx', dx);
+    sq.style.setProperty('--dy', dy);
     sq.style.setProperty('--r', Math.random() * 720);
-    
-    // ✅ تعديل المدة لتكون أبطأ وأكثر سلاسة
+
     const dur = (3 + Math.random() * 2) + 's';
     sq.style.setProperty('--dur', dur);
+
+    // إضافة تأخير عشوائي
+    const delay = Math.random() * 0.5 + 's';
+    sq.style.animationDelay = delay;
 
     const side = Math.floor(Math.random() * 4);
     switch (side) {
