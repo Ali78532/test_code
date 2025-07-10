@@ -116,3 +116,28 @@ body::after {
   color: #e0e0e0;
   margin: 10px 0;
 }
+
+/* === ستايل مربعات الكونفيتي العشوائية === */
+@keyframes confetti-fall {
+  to {
+    transform: translate(var(--dx), var(--dy)) rotate(calc(var(--r) * 1deg));
+    opacity: 0;
+  }
+}
+
+.confetti {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  background-color: red; /* يُستبدل بالـ inline-bg */
+  opacity: 0.9;
+  pointer-events: none;
+  /* المتغيرات يُضبطها الجافاسكربت */
+  --dx: 0px;     /* translation X */
+  --dy: 100vh;   /* translation Y أسفل الشاشة */
+  --r: 360;      /* زاوية الدوران النهائية */
+  animation: confetti-fall var(--dur) ease-out forwards;
+  z-index: 200;
+}

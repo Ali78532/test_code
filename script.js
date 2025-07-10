@@ -14,6 +14,44 @@ const containerEl = document.getElementById('quiz-container');
 const resultBox   = document.getElementById('result-box');
 const scoreEl     = document.getElementById('score');
 
+// دالة خلق الكونفيتي العشوائية
+function celebrate() {
+  const colors = ['#e91e63', '#ffeb3b', '#4caf50', '#2196f3', '#ff9800', '#9c27b0'];
+  const count = 200; // عدد القطع
+
+  for (let i = 0; i < count; i++) {
+    const sq = document.createElement('div');
+    sq.classList.add('confetti');
+
+    // موقع أفقي عشوائي لبدء القطعة
+    const startX = Math.random() * window.innerWidth;
+    sq.style.left = `${startX}px`;
+
+    // تعيين لون عشوائي
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    sq.style.backgroundColor = color;
+
+    // تعيين translation افقي (dx) عشوائي بين -50 و +50 في المئة من العرض
+    const dx = (Math.random() * 100 - 50) + 'vw';
+    sq.style.setProperty('--dx', dx);
+
+    // translation عمودي (dy) ثابت إلى أسفل viewport
+    sq.style.setProperty('--dy', '100vh');
+
+    // زاوية دورانية عشوائية بين 0 و 720 درجة
+    const r = Math.random() * 720;
+    sq.style.setProperty('--r', r);
+
+    // مدة الحركة عشوائية بين 1.5 و 3 ثواني
+    const dur = (1.5 + Math.random() * 1.5) + 's';
+    sq.style.setProperty('--dur', dur);
+
+    document.body.appendChild(sq);
+    sq.addEventListener('animationend', () => sq.remove());
+  }
+}
+
+// تحميل الاختبار ثم التشغيل
 fetch(`tests/${testName}.html`)
   .then(r => {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -22,14 +60,12 @@ fetch(`tests/${testName}.html`)
   .then(html => {
     const temp = document.createElement('div');
     temp.innerHTML = html;
-
     const h1 = temp.querySelector('h1');
     if (h1) {
       titleEl.textContent = h1.textContent;
       document.title    = h1.textContent;
       h1.remove();
     }
-
     containerEl.innerHTML = temp.innerHTML;
     initQuiz();
   })
@@ -54,10 +90,12 @@ function initQuiz() {
         correctSoundEl.play();
         opt.classList.add('correct');
         score += 2;
+
+        // **هنا الاحتفالية**
+        celebrate();
       } else {
         wrongSoundEl.currentTime = 0;
         wrongSoundEl.play();
-        // اهتزاز الهاتف 80ms
         if (navigator.vibrate) navigator.vibrate(80);
         opt.classList.add('wrong');
         const hint = parent.querySelector('.hint');
@@ -73,7 +111,7 @@ function initQuiz() {
       scoreEl.textContent = score;
 
       if (answered === containerEl.querySelectorAll('.question-container').length) {
-        resultBox.style.display     = 'block';
+        resultBox.style.display = 'block';
         showSolutionToggle();
       }
     });
@@ -98,11 +136,11 @@ function showSolutionToggle() {
 
     hideBtn.addEventListener('click', () => {
       containerEl.style.display = 'none';
-      // الدرجة تبقى ظاهرة:
-      resultBox.style.display = 'block';
-      hideBtn.style.display = 'none';
-      msg.style.display     = 'none';
-      showBtn.style.display = 'inline-block';
+      resultBox.style.display   = 'block';
+      hideBtn.style.display     = 'none';
+      msg.style.display         = 'none';
+      showBtn.style.display     = 'inline-block';
+      document.body.classList.add('solutions-hidden');
     });
 
     showBtn.addEventListener('click', () => {
@@ -110,6 +148,7 @@ function showSolutionToggle() {
       hideBtn.style.display     = 'inline-block';
       msg.style.display         = 'block';
       showBtn.style.display     = 'none';
+      document.body.classList.remove('solutions-hidden');
     });
   }
   toggleDiv.style.display = 'block';
