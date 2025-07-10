@@ -119,17 +119,17 @@ body::after {
   margin: 10px 0;
 }
 
-/* ==== الكونفيتي ==== */
 @keyframes confetti-fall {
   0% {
     transform: translate(0, 0) rotate(0deg);
     opacity: 0;
   }
-  10% {
+  1% {
     opacity: var(--o, 0.9);
   }
   100% {
     transform: translate(var(--dx), var(--dy)) rotate(calc(var(--r) * 1deg));
+    opacity: var(--o, 0.9);
   }
 }
 
@@ -138,7 +138,7 @@ body::after {
   width: var(--w, 8px);
   height: var(--h, 8px);
   background-color: var(--bg, red);
-  opacity: var(--o, 0.9);
+  opacity: 0; /* مبدئيا مخفية دائما */
   pointer-events: none;
   transform: translate(0, 0) rotate(0deg);
   animation: confetti-fall var(--dur) ease-out forwards;
