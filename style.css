@@ -74,15 +74,6 @@ h1 {
   display: none;
 }
 
-body::after {
-  content: "إعداد الأستاذ: علي حسين";
-  display: block;
-  margin-top: 50px;
-  font-size: 18px;
-  color: #ccc;
-  text-align: center;
-}
-
 .hint {
   color: yellow;
   font-size: 16px;
@@ -115,4 +106,54 @@ body::after {
   font-size: 14px;
   color: #e0e0e0;
   margin: 10px 0;
+}
+
+/* === الإضافات الخاصة بالتثبيت عند إخفاء الحل === */
+body.solutions-hidden {
+  height: 100vh;
+  overflow: hidden;
+}
+
+body.solutions-hidden audio {
+  display: none;
+}
+
+body.solutions-hidden #quiz-title {
+  position: fixed;
+  top: 20px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  z-index: 100;
+}
+
+body.solutions-hidden #result-box {
+  position: fixed;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  transform: translateY(-50%);
+  z-index: 100;
+}
+
+body.solutions-hidden #solution-toggle {
+  position: fixed;
+  bottom: 60px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  z-index: 100;
+}
+
+body.solutions-hidden::after {
+  position: fixed;
+  bottom: 20px;
+  left: 0;
+  width: 100%;
+  margin: 0;
+  text-align: center;
+  content: "إعداد الأستاذ: علي حسين";
+  font-size: 18px;
+  color: #ccc;
+  z-index: 100;
 }

@@ -57,7 +57,6 @@ function initQuiz() {
       } else {
         wrongSoundEl.currentTime = 0;
         wrongSoundEl.play();
-        // اهتزاز الهاتف 80ms
         if (navigator.vibrate) navigator.vibrate(80);
         opt.classList.add('wrong');
         const hint = parent.querySelector('.hint');
@@ -98,11 +97,11 @@ function showSolutionToggle() {
 
     hideBtn.addEventListener('click', () => {
       containerEl.style.display = 'none';
-      // الدرجة تبقى ظاهرة:
-      resultBox.style.display = 'block';
-      hideBtn.style.display = 'none';
-      msg.style.display     = 'none';
-      showBtn.style.display = 'inline-block';
+      resultBox.style.display   = 'block';
+      hideBtn.style.display     = 'none';
+      msg.style.display         = 'none';
+      showBtn.style.display     = 'inline-block';
+      document.body.classList.add('solutions-hidden');
     });
 
     showBtn.addEventListener('click', () => {
@@ -110,7 +109,8 @@ function showSolutionToggle() {
       hideBtn.style.display     = 'inline-block';
       msg.style.display         = 'block';
       showBtn.style.display     = 'none';
+      document.body.classList.remove('solutions-hidden');
     });
   }
   toggleDiv.style.display = 'block';
-  }
+}
