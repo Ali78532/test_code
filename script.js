@@ -13,7 +13,7 @@ const scoreEl     = document.getElementById('score');
 
 function celebrate() {
   const colors = ['#e91e63', '#ffeb3b', '#4caf50', '#2196f3', '#ff9800', '#9c27b0'];
-  const count = 70; // عدد الأشرطة
+  const count = 50; // عدد الأشرطة
 
   for (let i = 0; i < count; i++) {
     const sq = document.createElement('div');
@@ -38,7 +38,7 @@ function celebrate() {
     sq.style.setProperty('--dur', dur);
 
     // التأخير العشوائي حتى 1 ثانية
-    const delay = Math.random() * 6 + 's';
+    const delay = Math.random() * 1 + 's';
     sq.style.animationDelay = delay;
 
     // تحديد نقطة الانطلاق فقط من الأعلى
