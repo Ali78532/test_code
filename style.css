@@ -121,7 +121,14 @@ body::after {
 
 /* ==== الكونفيتي ==== */
 @keyframes confetti-fall {
-  to {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: var(--o, 0.9);
+  }
+  100% {
     transform: translate(var(--dx), var(--dy)) rotate(calc(var(--r) * 1deg));
   }
 }
