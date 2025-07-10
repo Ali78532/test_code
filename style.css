@@ -1,4 +1,3 @@
-/* style.css */
 body {
   font-family: 'Helvetica Neue', sans-serif;
   margin: 20px;
@@ -117,27 +116,20 @@ body::after {
   margin: 10px 0;
 }
 
-/* === ستايل مربعات الكونفيتي العشوائية === */
 @keyframes confetti-fall {
   to {
     transform: translate(var(--dx), var(--dy)) rotate(calc(var(--r) * 1deg));
-    opacity: 0;
   }
 }
 
 .confetti {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 8px;
-  height: 8px;
-  background-color: red; /* يُستبدل بالـ inline-bg */
-  opacity: 0.9;
+  width: var(--w, 8px);
+  height: var(--h, 8px);
+  border-radius: var(--round, 0);
+  background-image: linear-gradient(to bottom right, var(--bg), rgba(255,255,255,0.4));
+  opacity: var(--o, 0.9);
   pointer-events: none;
-  /* المتغيرات يُضبطها الجافاسكربت */
-  --dx: 0px;     /* translation X */
-  --dy: 100vh;   /* translation Y أسفل الشاشة */
-  --r: 360;      /* زاوية الدوران النهائية */
-  animation: confetti-fall var(--dur) ease-out forwards;
   z-index: 200;
+  animation: confetti-fall var(--dur) ease-out forwards;
 }

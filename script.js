@@ -1,6 +1,3 @@
-// script.js
-
-// تجهيز وتحميل الصوت
 const correctSoundEl = document.getElementById('correct-sound');
 const wrongSoundEl   = document.getElementById('wrong-sound');
 correctSoundEl.load();
@@ -14,44 +11,58 @@ const containerEl = document.getElementById('quiz-container');
 const resultBox   = document.getElementById('result-box');
 const scoreEl     = document.getElementById('score');
 
-// دالة خلق الكونفيتي العشوائية
 function celebrate() {
   const colors = ['#e91e63', '#ffeb3b', '#4caf50', '#2196f3', '#ff9800', '#9c27b0'];
-  const count = 200; // عدد القطع
+  const count = 120; // زيادة العدد قليلاً
 
   for (let i = 0; i < count; i++) {
     const sq = document.createElement('div');
     sq.classList.add('confetti');
 
-    // موقع أفقي عشوائي لبدء القطعة
-    const startX = Math.random() * window.innerWidth;
-    sq.style.left = `${startX}px`;
+    const bg = colors[Math.floor(Math.random() * colors.length)];
+    sq.style.setProperty('--bg', bg);
+    sq.style.setProperty('--o', (0.7 + Math.random() * 0.3));
 
-    // تعيين لون عشوائي
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    sq.style.backgroundColor = color;
+    const w = 6 + Math.random() * 6;
+    const h = 4 + Math.random() * 8;
+    sq.style.setProperty('--w', w + 'px');
+    sq.style.setProperty('--h', h + 'px');
+    if (Math.random() < 0.2) sq.style.setProperty('--round', '50%');
 
-    // تعيين translation افقي (dx) عشوائي بين -50 و +50 في المئة من العرض
     const dx = (Math.random() * 100 - 50) + 'vw';
+    // زيادة المسافة العمودية إلى ما بعد الشاشة بالكامل
+    sq.style.setProperty('--dy', window.innerHeight + 200 + 'px');
     sq.style.setProperty('--dx', dx);
-
-    // translation عمودي (dy) ثابت إلى أسفل viewport
-    sq.style.setProperty('--dy', '100vh');
-
-    // زاوية دورانية عشوائية بين 0 و 720 درجة
-    const r = Math.random() * 720;
-    sq.style.setProperty('--r', r);
-
-    // مدة الحركة عشوائية بين 1.5 و 3 ثواني
+    sq.style.setProperty('--r', Math.random() * 720);
     const dur = (1.5 + Math.random() * 1.5) + 's';
     sq.style.setProperty('--dur', dur);
+
+    // أماكن الانطلاق العشوائية
+    const side = Math.floor(Math.random() * 4);
+    switch (side) {
+      case 0:
+        sq.style.top = '-10px';
+        sq.style.left = Math.random() * window.innerWidth + 'px';
+        break;
+      case 1:
+        sq.style.top = Math.random() * window.innerHeight + 'px';
+        sq.style.left = '-10px';
+        break;
+      case 2:
+        sq.style.top = Math.random() * window.innerHeight + 'px';
+        sq.style.left = window.innerWidth + 'px';
+        break;
+      case 3:
+        sq.style.top = window.innerHeight + 'px';
+        sq.style.left = Math.random() * window.innerWidth + 'px';
+        break;
+    }
 
     document.body.appendChild(sq);
     sq.addEventListener('animationend', () => sq.remove());
   }
 }
 
-// تحميل الاختبار ثم التشغيل
 fetch(`tests/${testName}.html`)
   .then(r => {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -63,7 +74,7 @@ fetch(`tests/${testName}.html`)
     const h1 = temp.querySelector('h1');
     if (h1) {
       titleEl.textContent = h1.textContent;
-      document.title    = h1.textContent;
+      document.title = h1.textContent;
       h1.remove();
     }
     containerEl.innerHTML = temp.innerHTML;
@@ -75,7 +86,7 @@ fetch(`tests/${testName}.html`)
   });
 
 function initQuiz() {
-  let score    = 0;
+  let score = 0;
   let answered = 0;
   const options = containerEl.querySelectorAll('.option');
 
@@ -90,8 +101,6 @@ function initQuiz() {
         correctSoundEl.play();
         opt.classList.add('correct');
         score += 2;
-
-        // **هنا الاحتفالية**
         celebrate();
       } else {
         wrongSoundEl.currentTime = 0;
@@ -132,22 +141,22 @@ function showSolutionToggle() {
 
     const hideBtn = toggleDiv.querySelector('#hide-btn');
     const showBtn = toggleDiv.querySelector('#show-btn');
-    const msg     = toggleDiv.querySelector('.toggle-msg');
+    const msg = toggleDiv.querySelector('.toggle-msg');
 
     hideBtn.addEventListener('click', () => {
       containerEl.style.display = 'none';
-      resultBox.style.display   = 'block';
-      hideBtn.style.display     = 'none';
-      msg.style.display         = 'none';
-      showBtn.style.display     = 'inline-block';
+      resultBox.style.display = 'block';
+      hideBtn.style.display = 'none';
+      msg.style.display = 'none';
+      showBtn.style.display = 'inline-block';
       document.body.classList.add('solutions-hidden');
     });
 
     showBtn.addEventListener('click', () => {
       containerEl.style.display = 'block';
-      hideBtn.style.display     = 'inline-block';
-      msg.style.display         = 'block';
-      showBtn.style.display     = 'none';
+      hideBtn.style.display = 'inline-block';
+      msg.style.display = 'block';
+      showBtn.style.display = 'none';
       document.body.classList.remove('solutions-hidden');
     });
   }
