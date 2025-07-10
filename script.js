@@ -38,7 +38,7 @@ function celebrate() {
     sq.style.setProperty('--dur', dur);
 
     // التأخير العشوائي حتى 1 ثانية
-    const delay = Math.random() * 5 + 's';
+    const delay = Math.random() * 6 + 's';
     sq.style.animationDelay = delay;
 
     // تحديد نقطة الانطلاق فقط من الأعلى
