@@ -13,7 +13,7 @@ const scoreEl     = document.getElementById('score');
 
 function celebrate() {
   const colors = ['#e91e63', '#ffeb3b', '#4caf50', '#2196f3', '#ff9800', '#9c27b0'];
-  const count = 120; // زيادة العدد قليلاً
+  const count = 120;
 
   for (let i = 0; i < count; i++) {
     const sq = document.createElement('div');
@@ -30,14 +30,14 @@ function celebrate() {
     if (Math.random() < 0.2) sq.style.setProperty('--round', '50%');
 
     const dx = (Math.random() * 100 - 50) + 'vw';
-    // زيادة المسافة العمودية إلى ما بعد الشاشة بالكامل
     sq.style.setProperty('--dy', window.innerHeight + 200 + 'px');
     sq.style.setProperty('--dx', dx);
     sq.style.setProperty('--r', Math.random() * 720);
-    const dur = (1.5 + Math.random() * 1.5) + 's';
+    
+    // ✅ تعديل المدة لتكون أبطأ وأكثر سلاسة
+    const dur = (3 + Math.random() * 2) + 's';
     sq.style.setProperty('--dur', dur);
 
-    // أماكن الانطلاق العشوائية
     const side = Math.floor(Math.random() * 4);
     switch (side) {
       case 0:
