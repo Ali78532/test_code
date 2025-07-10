@@ -95,6 +95,7 @@ body::after {
   text-align: center;
   margin-top: 20px;
 }
+
 .toggle-btn {
   display: inline-block;
   margin: 10px;
@@ -106,9 +107,11 @@ body::after {
   color: #e0e0e0;
   cursor: pointer;
 }
+
 .toggle-btn:hover {
   background: rgba(255,255,255,0.1);
 }
+
 .toggle-msg {
   text-align: center;
   font-size: 14px;
@@ -116,6 +119,7 @@ body::after {
   margin: 10px 0;
 }
 
+/* ==== الكونفيتي ==== */
 @keyframes confetti-fall {
   to {
     transform: translate(var(--dx), var(--dy)) rotate(calc(var(--r) * 1deg));
@@ -126,10 +130,10 @@ body::after {
   position: fixed;
   width: var(--w, 8px);
   height: var(--h, 8px);
-  border-radius: var(--round, 0);
-  background-image: linear-gradient(to bottom right, var(--bg), rgba(255,255,255,0.4));
+  background-color: var(--bg, red);
   opacity: var(--o, 0.9);
   pointer-events: none;
-  z-index: 200;
+  transform: translate(0, 0) rotate(0deg);
   animation: confetti-fall var(--dur) ease-out forwards;
+  z-index: 200;
 }
