@@ -13,7 +13,7 @@ const scoreEl     = document.getElementById('score');
 
 function celebrate() {
   const colors = ['#e91e63', '#ffeb3b', '#4caf50', '#2196f3', '#ff9800', '#9c27b0'];
-  const count = 90; // قللنا العدد
+  const count = 70; // عدد الأشرطة
 
   for (let i = 0; i < count; i++) {
     const sq = document.createElement('div');
@@ -37,29 +37,13 @@ function celebrate() {
     const dur = (3 + Math.random() * 2) + 's';
     sq.style.setProperty('--dur', dur);
 
-    // إضافة تأخير عشوائي
+    // التأخير العشوائي حتى 1 ثانية
     const delay = Math.random() * 1 + 's';
     sq.style.animationDelay = delay;
 
-    const side = Math.floor(Math.random() * 4);
-    switch (side) {
-      case 0:
-        sq.style.top = '-10px';
-        sq.style.left = Math.random() * window.innerWidth + 'px';
-        break;
-      case 1:
-        sq.style.top = Math.random() * window.innerHeight + 'px';
-        sq.style.left = '-10px';
-        break;
-      case 2:
-        sq.style.top = Math.random() * window.innerHeight + 'px';
-        sq.style.left = window.innerWidth + 'px';
-        break;
-      case 3:
-        sq.style.top = window.innerHeight + 'px';
-        sq.style.left = Math.random() * window.innerWidth + 'px';
-        break;
-    }
+    // تحديد نقطة الانطلاق فقط من الأعلى
+    sq.style.top = '-10px';
+    sq.style.left = Math.random() * window.innerWidth + 'px';
 
     document.body.appendChild(sq);
     sq.addEventListener('animationend', () => sq.remove());
