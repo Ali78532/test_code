@@ -38,7 +38,7 @@ function celebrate() {
     sq.style.setProperty('--dur', dur);
 
     // إضافة تأخير عشوائي
-    const delay = Math.random() * 0.5 + 's';
+    const delay = Math.random() * 1 + 's';
     sq.style.animationDelay = delay;
 
     const side = Math.floor(Math.random() * 4);
