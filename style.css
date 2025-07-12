@@ -26,7 +26,7 @@ h1#quiz-title {
   margin-bottom: 1rem;
 }
 .video-container {
-  width: 90%;
+  width: 100%;
   max-width: 360px;
   aspect-ratio: 3 / 5; 
   margin-bottom: 1rem;
