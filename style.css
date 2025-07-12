@@ -28,7 +28,7 @@ h1#quiz-title {
 .video-container {
   width: 90%;
   max-width: 360px;
-  aspect-ratio: 3 / 4;      /* 3:4 ratio */
+  aspect-ratio: 3 / 5; 
   margin-bottom: 1rem;
   border: 2px solid #fff;
   border-radius: 8px;
@@ -64,7 +64,7 @@ h1#quiz-title {
 .question {
   font-size: 20px;      
   font-weight: bold;
-  margin: 20px 0;
+  margin: 30px 0;
   direction: ltr;        
 }
 
@@ -136,9 +136,11 @@ h1#quiz-title {
 }
 .result.correct {
   color: #90ff90;
+  direction: ltr;        
 }
 .result.incorrect {
   color: #ff9999;
+  direction: ltr;        
 }
 
 /* الدرجة */
