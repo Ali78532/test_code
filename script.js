@@ -1,151 +1,177 @@
-const correctSoundEl = document.getElementById('correct-sound');
-const wrongSoundEl   = document.getElementById('wrong-sound');
-correctSoundEl.load();
-wrongSoundEl.load();
+// script.js
 
-const params   = new URLSearchParams(location.search);
+// أصوات النجاح/الخطأ
+const correctSound = new Audio('Correct.wav');
+const wrongSound   = new Audio('Wrong.wav');
+correctSound.load();
+wrongSound.load();
+
+// عناصر DOM
+const titleEl     = document.getElementById('quiz-title');
+const videoScreen = document.getElementById('video-screen');
+const quizScreen  = document.getElementById('quiz-screen');
+const startBtn    = document.getElementById('start-btn');
+const timeEl      = document.getElementById('time');
+const answerEl    = document.getElementById('answer');
+const wordsEl     = document.getElementById('words');
+const resultEl    = document.getElementById('result');
+const checkBtn    = document.getElementById('check-btn');
+const nextBtn     = document.getElementById('next-btn');
+const scoreEl     = document.getElementById('score');
+const footerText  = document.getElementById('footer-text');
+
+// استخراج اسم الاختبار من الرابط (test1 أو test2)
+const params   = new URLSearchParams(window.location.search);
 const testName = params.get('test') || 'test1';
 
-const titleEl     = document.getElementById('quiz-title');
-const containerEl = document.getElementById('quiz-container');
-const resultBox   = document.getElementById('result-box');
-const scoreEl     = document.getElementById('score');
+let times = [];
 
-function celebrate() {
-  const colors = ['#e91e63', '#ffeb3b', '#4caf50', '#2196f3', '#ff9800', '#9c27b0'];
-  const count = 50; // عدد الأشرطة
-
-  for (let i = 0; i < count; i++) {
-    const sq = document.createElement('div');
-    sq.classList.add('confetti');
-
-    const bg = colors[Math.floor(Math.random() * colors.length)];
-    sq.style.setProperty('--bg', bg);
-    sq.style.setProperty('--o', (0.7 + Math.random() * 0.3));
-
-    const w = 6 + Math.random() * 6;
-    const h = 4 + Math.random() * 8;
-    sq.style.setProperty('--w', w + 'px');
-    sq.style.setProperty('--h', h + 'px');
-
-    const dx = (Math.random() * 100 - 50) + 'vw';
-    const dy = window.innerHeight + 200 + 'px';
-    sq.style.setProperty('--dx', dx);
-    sq.style.setProperty('--dy', dy);
-    sq.style.setProperty('--r', Math.random() * 720);
-
-    const dur = (3 + Math.random() * 2) + 's';
-    sq.style.setProperty('--dur', dur);
-
-    // التأخير العشوائي
-    const delay = Math.random() * 2 + 's';
-    sq.style.animationDelay = delay;
-
-    // تحديد نقطة الانطلاق فقط من الأعلى
-    sq.style.top = '-10px';
-    sq.style.left = Math.random() * window.innerWidth + 'px';
-
-    document.body.appendChild(sq);
-    sq.addEventListener('animationend', () => sq.remove());
-  }
-}
-
+// جلب بيانات الاختبار
 fetch(`tests/${testName}.html`)
-  .then(r => {
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return r.text();
-  })
+  .then(res => res.ok ? res.text() : Promise.reject())
   .then(html => {
-    const temp = document.createElement('div');
-    temp.innerHTML = html;
-    const h1 = temp.querySelector('h1');
-    if (h1) {
-      titleEl.textContent = h1.textContent;
-      document.title = h1.textContent;
-      h1.remove();
-    }
-    containerEl.innerHTML = temp.innerHTML;
-    initQuiz();
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    titleEl.textContent = tmp.querySelector('h1').textContent;
+    times = JSON.parse(tmp.querySelector('#test-data').textContent);
+    startBtn.disabled = false;
   })
-  .catch(err => {
-    console.error('فشل تحميل الاختبار:', err);
-    containerEl.innerHTML = '<p>عذرًا، لم أتمكن من تحميل هذا الاختبار.</p>';
+  .catch(() => {
+    alert('تعذر تحميل الاختبار: ' + testName);
+    startBtn.disabled = true;
   });
+
+// عند الضغط على "بدأ الاختبار"
+startBtn.addEventListener('click', () => {
+  // إيقاف الفيديو
+  const iframe = videoScreen.querySelector('iframe');
+  iframe.src = '';
+  videoScreen.classList.add('hidden');
+  quizScreen.classList.remove('hidden');
+  initQuiz();
+});
 
 function initQuiz() {
-  let score = 0;
-  let answered = 0;
-  const options = containerEl.querySelectorAll('.option');
+  let used = new Set(), score = 0, currentIdx, selectedWords = [];
 
-  options.forEach(opt => {
-    opt.addEventListener('click', () => {
-      const parent = opt.parentElement;
-      if (parent.querySelector('.selected')) return;
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
 
-      const isCorrect = opt.dataset.correct === 'true';
-      if (isCorrect) {
-        correctSoundEl.currentTime = 0;
-        correctSoundEl.play();
-        opt.classList.add('correct');
-        score += 2;
-        celebrate();
-      } else {
-        wrongSoundEl.currentTime = 0;
-        wrongSoundEl.play();
-        if (navigator.vibrate) navigator.vibrate(80);
-        opt.classList.add('wrong');
-        const hint = parent.querySelector('.hint');
-        if (hint) hint.style.display = 'block';
-      }
+  function pickQuestion() {
+    if (used.size === times.length) return null;
+    let i;
+    do { i = Math.floor(Math.random() * times.length); }
+    while (used.has(i));
+    used.add(i);
+    return i;
+  }
 
-      parent.querySelectorAll('.option').forEach(o => {
-        if (o.dataset.correct === 'true') o.classList.add('correct');
-      });
+  function showQuestion() {
+    currentIdx = pickQuestion();
+    if (currentIdx === null) {
+      // نهاية الاختبار
+      timeEl.textContent    = '';
+      wordsEl.innerHTML     = '';
+      answerEl.style.display = 'none';
+      checkBtn.classList.add('hidden');
+      nextBtn.classList.add('hidden');
+      resultEl.textContent  = '';
+      scoreEl.textContent   = `الدرجة ${score}`;
+      scoreEl.classList.remove('hidden');
+      footerText.style.display = 'block';
+      return;
+    }
+    const q = times[currentIdx];
+    // عرض السؤال كنص أو وقت
+    if (q.question) {
+      timeEl.innerHTML = q.question;
+    } else {
+      timeEl.textContent = `${String(q.hour).padStart(2,'0')}:${String(q.minute).padStart(2,'0')}`;
+    }
+    // تهيئة الواجهة
+    selectedWords = [];
+    answerEl.style.display = '';
+    answerEl.textContent   = '';
+    resultEl.textContent   = '';
+    wordsEl.innerHTML       = '';
+    checkBtn.classList.remove('hidden');
+    nextBtn.classList.add('hidden');
+    scoreEl.classList.add('hidden');
+    footerText.style.display = 'none';
 
-      opt.classList.add('selected');
-      answered++;
-      scoreEl.textContent = score;
-
-      if (answered === containerEl.querySelectorAll('.question-container').length) {
-        resultBox.style.display = 'block';
-        showSolutionToggle();
-      }
-    });
-  });
-}
-
-function showSolutionToggle() {
-  let toggleDiv = document.getElementById('solution-toggle');
-  if (!toggleDiv) {
-    toggleDiv = document.createElement('div');
-    toggleDiv.id = 'solution-toggle';
-    toggleDiv.innerHTML = `
-      <button id="hide-btn" class="toggle-btn">إخفاء الحل</button>
-      <p class="toggle-msg">إذا كنت ترغب بأخذ لقطة شاشة يرجى إخفاء الحل لكي لا يظهر الحل لباقي الطلاب</p>
-      <button id="show-btn" class="toggle-btn" style="display:none;">عرض الحل</button>
-    `;
-    resultBox.insertAdjacentElement('afterend', toggleDiv);
-
-    const hideBtn = toggleDiv.querySelector('#hide-btn');
-    const showBtn = toggleDiv.querySelector('#show-btn');
-    const msg = toggleDiv.querySelector('.toggle-msg');
-
-    hideBtn.addEventListener('click', () => {
-      containerEl.style.display = 'none';
-      resultBox.style.display = 'block';
-      hideBtn.style.display = 'none';
-      msg.style.display = 'none';
-      showBtn.style.display = 'inline-block';
-      document.body.classList.add('solutions-hidden');
-    });
-
-    showBtn.addEventListener('click', () => {
-      containerEl.style.display = 'block';
-      hideBtn.style.display = 'inline-block';
-      msg.style.display = 'block';
-      showBtn.style.display = 'none';
-      document.body.classList.remove('solutions-hidden');
+    shuffle([...q.words]).forEach(word => {
+      const span = document.createElement('span');
+      span.textContent = word;
+      span.className   = 'word';
+      span.onclick = () => {
+        if (span.classList.toggle('selected')) selectedWords.push(word);
+        else selectedWords = selectedWords.filter(w => w !== word);
+        answerEl.textContent = selectedWords.join(' ');
+      };
+      wordsEl.append(span);
     });
   }
-  toggleDiv.style.display = 'block';
+
+  answerEl.onclick = () => {
+    document.querySelectorAll('.word.selected').forEach(s => s.classList.remove('selected'));
+    selectedWords = [];
+    answerEl.textContent = '';
+  };
+
+  checkBtn.onclick = () => {
+    const q   = times[currentIdx];
+    const ans = answerEl.textContent.trim();
+    if (ans === q.correct) {
+      correctSound.play();
+      resultEl.className   = 'result correct';
+      resultEl.textContent = 'إجابتك صحيحة! أحسنت.';
+      score += 2;
+      celebrate();
+    } else {
+      wrongSound.play();
+      resultEl.className   = 'result incorrect';
+      resultEl.innerHTML   = `إجابتك خاطئة. الإجابة الصحيحة هي<br>${q.correct}`;
+    }
+    checkBtn.classList.add('hidden');
+    nextBtn.classList.remove('hidden');
+  };
+
+  nextBtn.onclick = () => {
+    resultEl.textContent  = '';
+    answerEl.textContent  = '';
+    selectedWords = [];
+    document.querySelectorAll('.word.selected').forEach(s => s.classList.remove('selected'));
+    showQuestion();
+  };
+
+  showQuestion();
 }
+
+// دالة الاحتفال (confetti)
+function celebrate() {
+  const colors = ['#e91e63','#ffeb3b','#4caf50','#2196f3','#ff9800','#9c27b0'];
+  const count  = 50;
+  for (let i = 0; i < count; i++) {
+    const div = document.createElement('div');
+    div.className = 'confetti';
+    const bg = colors[Math.floor(Math.random() * colors.length)];
+    div.style.setProperty('--bg', bg);
+    div.style.setProperty('--o', String(0.7 + Math.random()*0.3));
+    div.style.setProperty('--w',  `${6 + Math.random()*6}px`);
+    div.style.setProperty('--h',  `${4 + Math.random()*8}px`);
+    div.style.setProperty('--dx', `${Math.random()*100-50}vw`);
+    div.style.setProperty('--dy', `${window.innerHeight + 200}px`);
+    div.style.setProperty('--r',  Math.random()*720);
+    div.style.setProperty('--dur', `${3+Math.random()*2}s`);
+    div.style.animationDelay = `${Math.random()*2}s`;
+    div.style.top  = '-10px';
+    div.style.left = `${Math.random()*window.innerWidth}px`;
+    document.body.append(div);
+    div.addEventListener('animationend', () => div.remove());
+  }
+}  

@@ -5,25 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>اختبار</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="preload" href="Correct.wav" as="audio">
-  <link rel="preload" href="Wrong.wav"   as="audio">
 </head>
 <body>
+  <!-- العنوان دائماً أعلى الشاشة -->
+  <h1 id="quiz-title">الإخبار عن الوقت</h1>
 
-  <!-- عناصر صوت التحكّم -->
-  <audio id="correct-sound" src="Correct.wav" preload="auto"></audio>
-  <audio id="wrong-sound"   src="Wrong.wav"   preload="auto"></audio>
+  <!-- شاشة الفيديو -->
+  <div id="video-screen" class="video-screen">
+    <div class="video-text">شوف الفيديو علمود تعرف شلون تمتحن 👇</div>
+    <div class="video-container">
+      <iframe 
+        src="https://www.youtube.com/embed/fGQGPE72Pr0?autoplay=1" 
+        title="شرح الاختبار" 
+        allowfullscreen>
+      </iframe>
+    </div>
+    <button id="start-btn" class="start-btn">بدأ الاختبار</button>
+  </div>
 
-  <!-- هنا يُحقن عنوان الاختبار -->
-  <h1 id="quiz-title"></h1>
+  <!-- شاشة الاختبار -->
+  <div id="quiz-screen" class="quiz-screen hidden">
+    <div class="question" id="time"></div>
+    <div class="answer" id="answer"></div>
+    <div class="words" id="words"></div>
+    <div class="result" id="result"></div>
+    <button id="check-btn" class="green-btn hidden">تحقق من الإجابة</button>
+    <button id="next-btn"  class="green-btn hidden">التالي</button>
+    <div id="score" class="hidden"></div>
+    <div id="footer-text" class="hidden">إعداد الأستاذ علي حسين</div>
+  </div>
 
-  <!-- هنا يُحقن محتوى الأسئلة -->
-  <div id="quiz-container"></div>
-
-  <!-- صندوق النتيجة المشترك -->
-  <div class="result" id="result-box">درجتك: <span id="score">0</span></div>
-
-  <!-- تحميل السكربت المشترك -->
   <script src="script.js"></script>
 </body>
 </html>
