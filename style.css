@@ -69,10 +69,11 @@ body {
   display: flex;
   justify-content: center;
   gap: 40px;
-  margin: 20px 0;
+  margin: 20px auto;    /* تضعه في منتصف العرض */
+  width: max-content;   /* يجعله بعرض محتواه تلقائيًا */
   position: relative;
-  width: 90%;
 }
+
 .list {
   display: flex;
   flex-direction: column;
