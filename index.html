@@ -3,10 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Quiz</title>
+  <title>توصيل كلمات</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Preload audio -->
+  <link rel="preload" href="Correct.wav" as="audio">
+  <link rel="preload" href="Wrong.wav"   as="audio">
 </head>
 <body>
+  <!-- عناصر صوت التحكّم -->
+  <audio id="correct-sound" src="Correct.wav" preload="auto"></audio>
+  <audio id="wrong-sound"   src="Wrong.wav"   preload="auto"></audio>
+
   <!-- شاشة الفيديو -->
   <div id="video-screen" class="video-screen">
     <div class="video-text">شوف الفيديو علمود تعرف شلون تمتحن 👇</div>
@@ -17,16 +24,25 @@
         allowfullscreen>
       </iframe>
     </div>
-    <button id="start-btn" class="start-btn">بدأ الاختبار</button>
+    <button id="start-btn" class="start-btn" disabled>بدأ الاختبار</button>
   </div>
 
-  <!-- شاشة الاختبار -->
+  <!-- شاشة اللعبة -->
   <div id="quiz-screen" class="hidden">
-    <div class="choices" id="choices"></div>
-    <div id="questions"></div>
-    <button id="result-button" class="result-button" onclick="showResult()">عرض النتيجة</button>
-    <div id="result" class="result"></div>
-    <div id="toggle-container"></div>
+    <div class="header">
+      <h1>توصيل كلمات</h1>
+    </div>
+    <div class="game-container">
+      <div class="list" id="left-list"></div>
+      <div class="list" id="right-list"></div>
+    </div>
+    <svg id="connections"></svg>
+    <div class="score" id="score-display">
+      <p>درجتك: <span id="score">0</span></p>
+    </div>
+    <div id="toggle-container">
+      <button id="toggle-btn" class="toggle-btn hidden">إخفاء الحل</button>
+    </div>
     <div class="footer">إعداد الأستاذ: علي حسين</div>
   </div>
 
