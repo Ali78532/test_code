@@ -18,6 +18,15 @@ h1 { text-align: center; margin: 0 0 10px; }
 }
 .topics-list li.active { background: #2a2a2a; }
 
+/* أسلوب الفواصل */
+.topics-list li.separator {
+  background: transparent;      
+  border: none;                 
+  color: #999955;               
+  font-size: 1em;               
+  pointer-events: none;        
+}
+
 .card {
   background: #1e1e1e;
   border-radius: 12px;
@@ -60,5 +69,5 @@ h1 { text-align: center; margin: 0 0 10px; }
 footer {
   text-align: center;
   color: #aaa;
-  margin-top: 20px;
+  margin-top: 50px;
 }
