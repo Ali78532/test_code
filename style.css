@@ -45,12 +45,20 @@ h1 { text-align: center; margin: 0 0 10px; }
   text-align: center;
   display: block;
   margin: 0 0 12px 0;
-  border-radius: 12px;
+  border-radius: 6px;
   background: transparent;
   cursor: pointer;
   transition: background 0.2s;
   -webkit-tap-highlight-color: transparent;
+  padding: 10px;
 }
-.audio-icon:active { background: rgba(255,255,255,0.2); }
+.audio-icon:active {
+  background: rgba(255,255,255,0.2);
+  padding: 10px;
+}
 
-footer { text-align: center; color: #aaa; margin-top: 20px; }
+footer {
+  text-align: center;
+  color: #aaa;
+  margin-top: 20px;
+}
