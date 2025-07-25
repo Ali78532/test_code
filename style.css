@@ -47,20 +47,23 @@ h1 { text-align: center; margin: 0 0 10px; }
   margin-bottom: 8px;
 }
 .audio-icon {
+  display: inline-block;    /* اجعلها على نفس السطر */
+  vertical-align: middle;   /* محاذاة عمودية مع النص المجاور */
   font-size: 2.2em;
   width: 48px;
   height: 48px;
   line-height: 48px;
   text-align: center;
-  display: block;
-  margin: 0 0 12px 0;
+  /* أزل margin-bottom: 12px */
+  margin: 0 8px 0 0;        /* مسافة صغيرة لليمين */
   border-radius: 6px;
   background: transparent;
   cursor: pointer;
   transition: background 0.2s;
-  -webkit-tap-highlight-color: transparent;
   padding: 10px;
+  -webkit-tap-highlight-color: transparent;
 }
+
 .audio-icon:active {
   background: rgba(255,255,255,0.2);
   padding: 10px;
@@ -70,4 +73,14 @@ footer {
   text-align: center;
   color: #aaa;
   margin-top: 50px;
+}
+
+.loading-text {
+  display: inline-block;   /* يبقى على نفس السطر */
+  font-size: 0.9em;
+  color: #eee;
+  margin-left: 8px;        /* مسافة بسيطة بين 🔊 والنص */
+  direction: rtl;
+  text-align: right;
+  vertical-align: middle;  /* محاذاة عمودية مع الأيقونة */
 }
