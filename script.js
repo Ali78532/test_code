@@ -2,8 +2,9 @@
 
 let currentAudio = null;
 let currentTopic = '';
-const audioCache = {};               // لتخزين مسبق للملفات
-let loadingTimers = new Map();       // لتخزين مؤقتات "جاري التحميل…"
+const audioCache = {};             // لتخزين مسبق للملفات
+let loadingTimers = new Map();     // لتخزين مؤقتات "جاري التحميل…"
+let preloadSessionToken = 0;       // رمزٌ متغير لوقف preload عند التنقل
 
 // الحالة الابتدائية
 history.replaceState({ topic: null }, '', '');
@@ -35,11 +36,15 @@ fetch('topics.json')
   })
   .catch(err => console.error('فشل تحميل topics.json:', err));
 
-// 2) عند اختيار موضوع، تحميل المحتوى ثم بدء الـpreload التسلسلي
+// 2) تحميل الموضوع واستدعاء الـpreload المتسلسل
 function loadTopic(topic, clickedLi) {
   currentTopic = topic;
   listEl.querySelectorAll('li').forEach(el => el.classList.remove('active'));
   clickedLi.classList.add('active');
+
+  // زِد الرمز لبدء جلسة preload جديدة
+  preloadSessionToken++;
+  const mySession = preloadSessionToken;
 
   fetch(`${topic}/content.html`)
     .then(r => r.text())
@@ -50,8 +55,8 @@ function loadTopic(topic, clickedLi) {
       contentEl.classList.remove('hidden');
       history.pushState({ topic }, '', '');
 
-      // بدء التحميل المتسلسل للملفات الصوتية
-      preloadSequentialAudio().catch(console.error);
+      // اطلاق التحميل المتسلسل في الخلفية مع الجلسة
+      preloadSequentialAudio(mySession).catch(console.error);
     });
 }
 
@@ -69,9 +74,9 @@ window.addEventListener('popstate', e => {
   }
 });
 
-// 4) دالة التشغيل الموحدة مع جدولة "جاري التحميل…" وإلغائها
+// 4) دالة التشغيل مع جدولة "جاري التحميل…" وإلغائها
 function playAudio(filename) {
-  // إزالة أي عبارات تحميل حالية
+  // إزالة كل عبارات "جاري التحميل…" الحالية
   contentEl.querySelectorAll('.loading-text').forEach(el => el.remove());
 
   // إيقاف الصوت السابق
@@ -80,7 +85,7 @@ function playAudio(filename) {
     currentAudio.currentTime = 0;
   }
 
-  // إيجاد الأيقونة المطابقة
+  // العثور على الأيقونة المطابقة
   const selector = `.audio-icon[onclick="playAudio('${filename}')"]`;
   const elem = document.querySelector(selector);
   if (!elem) {
@@ -88,7 +93,7 @@ function playAudio(filename) {
     return;
   }
 
-  // إلغاء مؤقت سابق إن وُجد
+  // إلغاء أي مؤقت سابق
   if (loadingTimers.has(elem)) {
     clearTimeout(loadingTimers.get(elem));
     loadingTimers.delete(elem);
@@ -103,48 +108,51 @@ function playAudio(filename) {
   }, 500);
   loadingTimers.set(elem, timer);
 
-  // إنشاء الصوت (مخزن في الكاش أو جديد)
+  // إنشاء أو استرجاع الصوت من الكاش
   currentAudio = audioCache[filename]
     ? audioCache[filename]
     : new Audio(`${currentTopic}/${filename}`);
 
-  if (!audioCache[filename]) {
-    // إذا جديد، نترك preload كما هو
-    // الكائن Audio الافتراضي قد لا يحتاج load() هنا
-  }
-
-  // عند بدء التشغيل فعليًا (حتى من الكاش)
+  // عند بدء التشغيل (حتى من الكاش)
   currentAudio.addEventListener('playing', () => {
-    // إلغاء مؤقت التحميل إذا لم ينفذ بعد
     if (loadingTimers.has(elem)) {
       clearTimeout(loadingTimers.get(elem));
       loadingTimers.delete(elem);
     }
-    // إزالة عبارة "جاري التحميل…" إن ظهرت
     const t = elem.parentNode.querySelector('.loading-text');
     if (t) t.remove();
   });
 
-  // شغل الصوت
+  // شغّل الصوت
   currentAudio.play().catch(console.error);
 }
 
-// 5) تحميل متسلسل للملفات الصوتية لضمان ترتيب التحميل
-async function preloadSequentialAudio() {
+// 5) تحميل الملفات الصوتية تباعًا وبجلسة محددة
+async function preloadSequentialAudio(sessionToken) {
   const icons = contentEl.querySelectorAll('.audio-icon');
   for (const icon of icons) {
-    const onclick = icon.getAttribute('onclick');
+    // إذا خرج المستخدم من الجلسة، توقف
+    if (sessionToken !== preloadSessionToken) return;
+
+    const onclick = icon.getAttribute('onclick') || '';
     const match = onclick.match(/playAudio\('(.+?)'\)/);
     if (!match) continue;
     const filename = match[1];
+
     if (!audioCache[filename]) {
       const audio = new Audio(`${currentTopic}/${filename}`);
       audio.preload = 'auto';
-      // انتظر حتى يتحمَّل الملف كفاية للتشغيل المستمر
+      // انتظر حتى يتحمَّل بما يكفي
       await new Promise(resolve => {
-        audio.addEventListener('canplaythrough', resolve, { once: true });
+        const onCan = () => {
+          audio.removeEventListener('canplaythrough', onCan);
+          resolve();
+        };
+        audio.addEventListener('canplaythrough', onCan);
         audio.load();
       });
+      // إذا غادر المستخدم الجلسة فلن نضيف للكاش
+      if (sessionToken !== preloadSessionToken) return;
       audioCache[filename] = audio;
     }
   }
