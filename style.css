@@ -22,7 +22,7 @@ h1 { text-align: center; margin: 0 0 10px; }
 .topics-list li.separator {
   background: transparent;      
   border: none;                 
-  color: #999955;               
+  color: #dddd99;               
   font-size: 1em;               
   pointer-events: none;        
 }
@@ -78,7 +78,7 @@ footer {
 .loading-text {
   display: inline-block;   /* يبقى على نفس السطر */
   font-size: 0.9em;
-  color: #eee;
+  color: #999;
   margin-left: 8px;        /* مسافة بسيطة بين 🔊 والنص */
   direction: rtl;
   text-align: right;

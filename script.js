@@ -21,7 +21,7 @@ fetch('topics.json')
       if (group !== lastGroup) {
         const sep = document.createElement('li');
         sep.className = 'separator';
-        sep.textContent = `--------(${group})--------`;
+        sep.textContent = `--------( ${group} )--------`;
         listEl.appendChild(sep);
         lastGroup = group;
       }
@@ -64,49 +64,43 @@ window.addEventListener('popstate', e => {
 });
 
 function playAudio(filename) {
-  // حدّد العنصر <span class="audio-icon"> المطابق بالـ onclick
-  const selector = `.audio-icon[onclick="playAudio('${filename}')"]`;
-  const elem = document.querySelector(selector);
-  if (!elem) {
-    console.warn('لم أجد أيقونة للصوت لملف:', filename);
-    return;
-  }
+  // 0. إزالة كل عبارات "جاري التحميل…" الحالية
+  contentEl.querySelectorAll('.loading-text').forEach(el => el.remove());
 
-  // 1. أوقف أي صوت سابق واِمسح نص التحميل عنه
+  // 1. توقف عن أي صوت سابق
   if (currentAudio) {
     currentAudio.pause();
     currentAudio.currentTime = 0;
   }
-  // ألغ المؤقت القديم إن وجد
-  if (loadingTimers.has(elem)) {
-    clearTimeout(loadingTimers.get(elem));
-    loadingTimers.delete(elem);
-  }
-  // اِمسح أي عبارة تحميل ظاهرة
-  const prev = elem.parentNode.querySelector('.loading-text');
-  if (prev) prev.remove();
 
-  // 2. جدولة ظهور "جاري التحميل…" بعد 500ms
-  const timer = setTimeout(() => {
+  // 2. جدولة ظهور "جاري التحميل…" بعد 500ms للأيقونة المضغوطة
+  const selector = `.audio-icon[onclick="playAudio('${filename}')"]`;
+  const elem = document.querySelector(selector);
+  if (!elem) return console.warn('لم أجد أيقونة للصوت لملف:', filename);
+
+  // إلغاء مؤقت سابق إن وُجد
+  if (elem._loadingTimer) {
+    clearTimeout(elem._loadingTimer);
+    elem._loadingTimer = null;
+  }
+
+  elem._loadingTimer = setTimeout(() => {
     const txt = document.createElement('span');
     txt.className = 'loading-text';
     txt.textContent = 'جاري التحميل…';
     elem.insertAdjacentElement('afterend', txt);
   }, 500);
-  loadingTimers.set(elem, timer);
 
   // 3. إنشاء وتشغيل الصوت
   currentAudio = new Audio(`${currentTopic}/${filename}`);
   currentAudio.load();
 
-  // عند بدء التشغيل (حتى لو من الكاش)
   currentAudio.addEventListener('playing', () => {
-    // ألغي المؤقت لو لم ينفذ بعد
-    if (loadingTimers.has(elem)) {
-      clearTimeout(loadingTimers.get(elem));
-      loadingTimers.delete(elem);
+    // عند بدء الصوت: ألغِ المؤقت ونظِّف العبارة
+    if (elem._loadingTimer) {
+      clearTimeout(elem._loadingTimer);
+      elem._loadingTimer = null;
     }
-    // اِمسح عبارة التحميل إن ظهرت
     const t = elem.parentNode.querySelector('.loading-text');
     if (t) t.remove();
   });
