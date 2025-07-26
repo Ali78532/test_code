@@ -22,7 +22,7 @@ h1 { text-align: center; margin: 0 0 10px; }
 .topics-list li.separator {
   background: transparent;      
   border: none;                 
-  color: #dddd99;               
+  color: #ffff99;               
   font-size: 1em;               
   pointer-events: none;        
 }
@@ -55,7 +55,6 @@ h1 { text-align: center; margin: 0 0 10px; }
   line-height: 48px;
   text-align: center;
   /* أزل margin-bottom: 12px */
-  margin: 0 8px 0 0;        /* مسافة صغيرة لليمين */
   border-radius: 6px;
   background: transparent;
   cursor: pointer;
@@ -79,7 +78,6 @@ footer {
   display: inline-block;   /* يبقى على نفس السطر */
   font-size: 0.9em;
   color: #999;
-  margin-left: 8px;        /* مسافة بسيطة بين 🔊 والنص */
   direction: rtl;
   text-align: right;
   vertical-align: middle;  /* محاذاة عمودية مع الأيقونة */

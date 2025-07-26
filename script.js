@@ -43,6 +43,7 @@ function loadTopic(topic, clickedLi) {
     .then(r => r.text())
     .then(html => {
       contentEl.innerHTML = html;
+	  preloadAllAudio();
       window.scrollTo(0, 0);
       menuEl.classList.add('hidden');
       contentEl.classList.remove('hidden');
@@ -92,7 +93,7 @@ function playAudio(filename) {
   }, 500);
 
   // 3. إنشاء وتشغيل الصوت
-  currentAudio = new Audio(`${currentTopic}/${filename}`);
+  currentAudio = audioCache[filename] || new Audio(`${currentTopic}/${filename}`);
   currentAudio.load();
 
   currentAudio.addEventListener('playing', () => {
@@ -106,4 +107,26 @@ function playAudio(filename) {
   });
 
   currentAudio.play().catch(console.error);
+}
+
+// كائن للاحتفاظ بمسبقات التحميل
+const audioCache = {};
+
+function preloadAllAudio() {
+  // اجمع كل span.audio-icon الموجودة
+  contentEl.querySelectorAll('.audio-icon').forEach(icon => {
+    // استخلص اسم الملف من onclick، مثلاً "foo.m4a"
+    const onclick = icon.getAttribute('onclick'); // e.g. "playAudio('foo.m4a')"
+    const match = onclick.match(/playAudio\('(.+?)'\)/);
+    if (match) {
+      const filename = match[1];
+      // إذا لم يكن محمّلاً مسبقاً
+      if (!audioCache[filename]) {
+        const audio = new Audio(`${currentTopic}/${filename}`);
+        audio.preload = 'auto';  // طلب تحميل مسبق كامل
+        audio.load();
+        audioCache[filename] = audio;
+      }
+    }
+  });
 }
