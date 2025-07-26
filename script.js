@@ -2,7 +2,8 @@
 
 let currentAudio = null;
 let currentTopic = '';
-let loadingTimers = new Map();  // للاحتفاظ بمؤقتات التحميل لكل أيقونة
+const audioCache = {};               // لتخزين مسبق للملفات
+let loadingTimers = new Map();       // لتخزين مؤقتات "جاري التحميل…"
 
 // الحالة الابتدائية
 history.replaceState({ topic: null }, '', '');
@@ -11,7 +12,7 @@ const menuEl    = document.getElementById('menu');
 const listEl    = document.getElementById('topics-list');
 const contentEl = document.getElementById('content-area');
 
-// بناء القائمة
+// 1) بناء القائمة مع الفواصل
 fetch('topics.json')
   .then(res => res.json())
   .then(topics => {
@@ -21,7 +22,7 @@ fetch('topics.json')
       if (group !== lastGroup) {
         const sep = document.createElement('li');
         sep.className = 'separator';
-        sep.textContent = `--------( ${group} )--------`;
+        sep.textContent = `--------(${group})--------`;
         listEl.appendChild(sep);
         lastGroup = group;
       }
@@ -34,6 +35,7 @@ fetch('topics.json')
   })
   .catch(err => console.error('فشل تحميل topics.json:', err));
 
+// 2) عند اختيار موضوع، تحميل المحتوى ثم بدء الـpreload التسلسلي
 function loadTopic(topic, clickedLi) {
   currentTopic = topic;
   listEl.querySelectorAll('li').forEach(el => el.classList.remove('active'));
@@ -43,14 +45,17 @@ function loadTopic(topic, clickedLi) {
     .then(r => r.text())
     .then(html => {
       contentEl.innerHTML = html;
-	  preloadAllAudio();
       window.scrollTo(0, 0);
       menuEl.classList.add('hidden');
       contentEl.classList.remove('hidden');
       history.pushState({ topic }, '', '');
+
+      // بدء التحميل المتسلسل للملفات الصوتية
+      preloadSequentialAudio().catch(console.error);
     });
 }
 
+// 3) دعم زر الرجوع
 window.addEventListener('popstate', e => {
   if (!e.state || e.state.topic === null) {
     if (currentAudio) {
@@ -64,69 +69,83 @@ window.addEventListener('popstate', e => {
   }
 });
 
+// 4) دالة التشغيل الموحدة مع جدولة "جاري التحميل…" وإلغائها
 function playAudio(filename) {
-  // 0. إزالة كل عبارات "جاري التحميل…" الحالية
+  // إزالة أي عبارات تحميل حالية
   contentEl.querySelectorAll('.loading-text').forEach(el => el.remove());
 
-  // 1. توقف عن أي صوت سابق
+  // إيقاف الصوت السابق
   if (currentAudio) {
     currentAudio.pause();
     currentAudio.currentTime = 0;
   }
 
-  // 2. جدولة ظهور "جاري التحميل…" بعد 500ms للأيقونة المضغوطة
+  // إيجاد الأيقونة المطابقة
   const selector = `.audio-icon[onclick="playAudio('${filename}')"]`;
   const elem = document.querySelector(selector);
-  if (!elem) return console.warn('لم أجد أيقونة للصوت لملف:', filename);
-
-  // إلغاء مؤقت سابق إن وُجد
-  if (elem._loadingTimer) {
-    clearTimeout(elem._loadingTimer);
-    elem._loadingTimer = null;
+  if (!elem) {
+    console.warn('لم أجد أيقونة للصوت لملف:', filename);
+    return;
   }
 
-  elem._loadingTimer = setTimeout(() => {
+  // إلغاء مؤقت سابق إن وُجد
+  if (loadingTimers.has(elem)) {
+    clearTimeout(loadingTimers.get(elem));
+    loadingTimers.delete(elem);
+  }
+
+  // جدولة ظهور "جاري التحميل…" بعد 500ms
+  const timer = setTimeout(() => {
     const txt = document.createElement('span');
     txt.className = 'loading-text';
     txt.textContent = 'جاري التحميل…';
     elem.insertAdjacentElement('afterend', txt);
   }, 500);
+  loadingTimers.set(elem, timer);
 
-  // 3. إنشاء وتشغيل الصوت
-  currentAudio = audioCache[filename] || new Audio(`${currentTopic}/${filename}`);
-  currentAudio.load();
+  // إنشاء الصوت (مخزن في الكاش أو جديد)
+  currentAudio = audioCache[filename]
+    ? audioCache[filename]
+    : new Audio(`${currentTopic}/${filename}`);
 
+  if (!audioCache[filename]) {
+    // إذا جديد، نترك preload كما هو
+    // الكائن Audio الافتراضي قد لا يحتاج load() هنا
+  }
+
+  // عند بدء التشغيل فعليًا (حتى من الكاش)
   currentAudio.addEventListener('playing', () => {
-    // عند بدء الصوت: ألغِ المؤقت ونظِّف العبارة
-    if (elem._loadingTimer) {
-      clearTimeout(elem._loadingTimer);
-      elem._loadingTimer = null;
+    // إلغاء مؤقت التحميل إذا لم ينفذ بعد
+    if (loadingTimers.has(elem)) {
+      clearTimeout(loadingTimers.get(elem));
+      loadingTimers.delete(elem);
     }
+    // إزالة عبارة "جاري التحميل…" إن ظهرت
     const t = elem.parentNode.querySelector('.loading-text');
     if (t) t.remove();
   });
 
+  // شغل الصوت
   currentAudio.play().catch(console.error);
 }
 
-// كائن للاحتفاظ بمسبقات التحميل
-const audioCache = {};
-
-function preloadAllAudio() {
-  // اجمع كل span.audio-icon الموجودة
-  contentEl.querySelectorAll('.audio-icon').forEach(icon => {
-    // استخلص اسم الملف من onclick، مثلاً "foo.m4a"
-    const onclick = icon.getAttribute('onclick'); // e.g. "playAudio('foo.m4a')"
+// 5) تحميل متسلسل للملفات الصوتية لضمان ترتيب التحميل
+async function preloadSequentialAudio() {
+  const icons = contentEl.querySelectorAll('.audio-icon');
+  for (const icon of icons) {
+    const onclick = icon.getAttribute('onclick');
     const match = onclick.match(/playAudio\('(.+?)'\)/);
-    if (match) {
-      const filename = match[1];
-      // إذا لم يكن محمّلاً مسبقاً
-      if (!audioCache[filename]) {
-        const audio = new Audio(`${currentTopic}/${filename}`);
-        audio.preload = 'auto';  // طلب تحميل مسبق كامل
+    if (!match) continue;
+    const filename = match[1];
+    if (!audioCache[filename]) {
+      const audio = new Audio(`${currentTopic}/${filename}`);
+      audio.preload = 'auto';
+      // انتظر حتى يتحمَّل الملف كفاية للتشغيل المستمر
+      await new Promise(resolve => {
+        audio.addEventListener('canplaythrough', resolve, { once: true });
         audio.load();
-        audioCache[filename] = audio;
-      }
+      });
+      audioCache[filename] = audio;
     }
-  });
+  }
 }
