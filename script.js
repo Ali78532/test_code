@@ -6,20 +6,15 @@ const audioCache = {};             // لتخزين مسبق للملفات
 let loadingTimers = new Map();     // لتخزين مؤقتات "جاري التحميل…"
 let preloadSessionToken = 0;       // رمزٌ متغير لوقف preload عند التنقل
 
-// 1) بناء القائمة مع الفواصل
+const menuEl    = document.getElementById('menu');
+const listEl    = document.getElementById('topics-list');
+const contentEl = document.getElementById('content-area');
+
+// 1) بناء القائمة
 fetch('topics.json')
   .then(res => res.json())
   .then(topics => {
-    let lastGroup = null;
     topics.forEach(topic => {
-      const group = topic.group || 'عام';
-      if (group !== lastGroup) {
-        const sep = document.createElement('li');
-        sep.className = 'separator';
-        sep.textContent = group;
-        listEl.appendChild(sep);
-        lastGroup = group;
-      }
       const li = document.createElement('li');
       li.textContent   = topic.title;
       li.dataset.topic = topic.id;
@@ -28,14 +23,10 @@ fetch('topics.json')
       listEl.appendChild(li);
     });
 
-    // --- التعديل الجديد: التحقق من الرابط عند فتح الصفحة ---
+    // التحقق من الرابط عند فتح الصفحة
     checkHashOnLoad();
   })
   .catch(err => console.error('فشل تحميل topics.json:', err));
-
-const menuEl    = document.getElementById('menu');
-const listEl    = document.getElementById('topics-list');
-const contentEl = document.getElementById('content-area');
 
 // 2) تحميل الموضوع واستدعاء الـpreload المتسلسل
 function loadTopic(topic, clickedLi, updateHash = false) {
