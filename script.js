@@ -6,13 +6,6 @@ const audioCache = {};             // لتخزين مسبق للملفات
 let loadingTimers = new Map();     // لتخزين مؤقتات "جاري التحميل…"
 let preloadSessionToken = 0;       // رمزٌ متغير لوقف preload عند التنقل
 
-// الحالة الابتدائية
-history.replaceState({ topic: null }, '', '');
-
-const menuEl    = document.getElementById('menu');
-const listEl    = document.getElementById('topics-list');
-const contentEl = document.getElementById('content-area');
-
 // 1) بناء القائمة مع الفواصل
 fetch('topics.json')
   .then(res => res.json())
@@ -23,24 +16,35 @@ fetch('topics.json')
       if (group !== lastGroup) {
         const sep = document.createElement('li');
         sep.className = 'separator';
-        sep.textContent = `--------(${group})--------`;
+        sep.textContent = group;
         listEl.appendChild(sep);
         lastGroup = group;
       }
       const li = document.createElement('li');
       li.textContent   = topic.title;
       li.dataset.topic = topic.id;
-      li.addEventListener('click', () => loadTopic(topic.id, li));
+      // تمرير true لتغيير الـ hash في شريط العنوان عند النقر اليدوي
+      li.addEventListener('click', () => loadTopic(topic.id, li, true)); 
       listEl.appendChild(li);
     });
+
+    // --- التحقق من الرابط عند فتح الصفحة ---
+    checkHashOnLoad();
   })
   .catch(err => console.error('فشل تحميل topics.json:', err));
 
+const menuEl    = document.getElementById('menu');
+const listEl    = document.getElementById('topics-list');
+const contentEl = document.getElementById('content-area');
+
 // 2) تحميل الموضوع واستدعاء الـpreload المتسلسل
-function loadTopic(topic, clickedLi) {
+function loadTopic(topic, clickedLi, updateHash = false) {
   currentTopic = topic;
   listEl.querySelectorAll('li').forEach(el => el.classList.remove('active'));
-  clickedLi.classList.add('active');
+  
+  if(clickedLi) {
+      clickedLi.classList.add('active');
+  }
 
   // زِد الرمز لبدء جلسة preload جديدة
   preloadSessionToken++;
@@ -53,25 +57,51 @@ function loadTopic(topic, clickedLi) {
       window.scrollTo(0, 0);
       menuEl.classList.add('hidden');
       contentEl.classList.remove('hidden');
-      history.pushState({ topic }, '', '');
+      
+      // تحديث الرابط والسجل
+      if (updateHash) {
+          window.location.hash = topic;
+      }
 
       // اطلاق التحميل المتسلسل في الخلفية مع الجلسة
       preloadSequentialAudio(mySession).catch(console.error);
     });
 }
 
+// دالة جديدة للتحقق من الرابط عند الفتح
+function checkHashOnLoad() {
+    let currentHash = window.location.hash;
+    if (currentHash) {
+        let topicId = currentHash.replace('#', '');
+        // البحث عن عنصر القائمة المطابق للـ id
+        let targetLi = document.querySelector(`li[data-topic="${topicId}"]`);
+        
+        if (targetLi) {
+             // فتح الموضوع بدون تغيير الـ hash مجدداً
+            loadTopic(topicId, targetLi, false);
+        }
+    } else {
+        // الحالة الابتدائية إذا لم يكن هناك هاش
+        history.replaceState({ topic: null }, '', window.location.pathname);
+    }
+}
+
 // 3) دعم زر الرجوع
 window.addEventListener('popstate', e => {
-  if (!e.state || e.state.topic === null) {
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio.currentTime = 0;
-      currentAudio = null;
+    // إذا رجعنا إلى صفحة بدون هاش (القائمة الرئيسية)
+    if (!window.location.hash) {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio = null;
+      }
+      contentEl.classList.add('hidden');
+      menuEl.classList.remove('hidden');
+      listEl.querySelectorAll('li').forEach(el => el.classList.remove('active'));
+    } else {
+      // إذا كان الرجوع لموضوع آخر (تغير الهاش)
+      checkHashOnLoad();
     }
-    contentEl.classList.add('hidden');
-    menuEl.classList.remove('hidden');
-    listEl.querySelectorAll('li').forEach(el => el.classList.remove('active'));
-  }
 });
 
 // 4) دالة التشغيل مع جدولة "جاري التحميل…" وإلغائها
@@ -87,7 +117,7 @@ function playAudio(filename) {
 
   // العثور على الأيقونة المطابقة
   const selector = `.audio-icon[onclick="playAudio('${filename}')"]`;
-  const elem = document.querySelector(selector);
+  const elem     = document.querySelector(selector);
   if (!elem) {
     console.warn('لم أجد أيقونة للصوت لملف:', filename);
     return;
@@ -108,10 +138,14 @@ function playAudio(filename) {
   }, 500);
   loadingTimers.set(elem, timer);
 
-  // إنشاء أو استرجاع الصوت من الكاش
-  currentAudio = audioCache[filename]
-    ? audioCache[filename]
-    : new Audio(`${currentTopic}/${filename}`);
+  // **** هنا نستخدم المسار المفتاحي بدل الاسم فقط ****
+  const key = `${currentTopic}/${filename}`;
+  if (audioCache[key]) {
+    currentAudio = audioCache[key];
+  } else {
+    currentAudio = new Audio(key);
+    audioCache[key] = currentAudio;
+  }
 
   // عند بدء التشغيل (حتى من الكاش)
   currentAudio.addEventListener('playing', () => {
@@ -131,18 +165,17 @@ function playAudio(filename) {
 async function preloadSequentialAudio(sessionToken) {
   const icons = contentEl.querySelectorAll('.audio-icon');
   for (const icon of icons) {
-    // إذا خرج المستخدم من الجلسة، توقف
     if (sessionToken !== preloadSessionToken) return;
 
     const onclick = icon.getAttribute('onclick') || '';
-    const match = onclick.match(/playAudio\('(.+?)'\)/);
-    if (!match) continue;
-    const filename = match[1];
+    const m = onclick.match(/playAudio\('(.+?)'\)/);
+    if (!m) continue;
+    const filename = m[1];
 
-    if (!audioCache[filename]) {
-      const audio = new Audio(`${currentTopic}/${filename}`);
+    const key = `${currentTopic}/${filename}`;
+    if (!audioCache[key]) {
+      const audio = new Audio(key);
       audio.preload = 'auto';
-      // انتظر حتى يتحمَّل بما يكفي
       await new Promise(resolve => {
         const onCan = () => {
           audio.removeEventListener('canplaythrough', onCan);
@@ -151,9 +184,8 @@ async function preloadSequentialAudio(sessionToken) {
         audio.addEventListener('canplaythrough', onCan);
         audio.load();
       });
-      // إذا غادر المستخدم الجلسة فلن نضيف للكاش
       if (sessionToken !== preloadSessionToken) return;
-      audioCache[filename] = audio;
+      audioCache[key] = audio;
     }
   }
 }
