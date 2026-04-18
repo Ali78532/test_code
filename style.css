@@ -8,11 +8,11 @@ h1 {
    }
 
 #content-area h1 {
-  margin-bottom: 0px;
-  margin-top: 40px;
+  margin-bottom: 30px;
+  margin-top: 20px;
   font-size: 2em;
 }
-.topics-list { list-style: none; padding: 0; margin: -30px auto 10px max-width: 400px; }
+.topics-list { list-style: none; padding: 0; margin: 0 auto 10px; max-width: 400px; }
 .topics-list li {
   background: #1e1e1e;
   margin-bottom: 10px;
@@ -40,7 +40,7 @@ h1 {
 
 /* قبل النص: خط وأيضاً القوس الافتتاحي */
 .topics-list li.separator::before {
-  content: '';
+  content: '───(';
   display: inline-block;
   vertical-align: middle;
   color: #666;          /* لون الخط والقوس */
@@ -49,7 +49,7 @@ h1 {
 
 /* بعد النص: القوس الإغلاق والخط */
 .topics-list li.separator::after {
-  content: '';
+  content: ')───';
   display: inline-block;
   vertical-align: middle;
   color: #666;          /* لون الخط والقوس */

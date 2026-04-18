@@ -12,7 +12,7 @@ fetch('topics.json')
   .then(topics => {
     let lastGroup = null;
     topics.forEach(topic => {
-      const group = topic.group || '';
+      const group = topic.group || 'عام';
       if (group !== lastGroup) {
         const sep = document.createElement('li');
         sep.className = 'separator';
@@ -28,7 +28,7 @@ fetch('topics.json')
       listEl.appendChild(li);
     });
 
-    // --- التحقق من الرابط عند فتح الصفحة ---
+    // --- التعديل الجديد: التحقق من الرابط عند فتح الصفحة ---
     checkHashOnLoad();
   })
   .catch(err => console.error('فشل تحميل topics.json:', err));
