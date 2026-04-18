@@ -12,7 +12,7 @@ fetch('topics.json')
   .then(topics => {
     let lastGroup = null;
     topics.forEach(topic => {
-      const group = topic.group || 'عام';
+      const group = topic.group || 'الصف الرابع الاعدادي';
       if (group !== lastGroup) {
         const sep = document.createElement('li');
         sep.className = 'separator';
