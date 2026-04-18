@@ -40,7 +40,7 @@ h1 {
 
 /* قبل النص: خط وأيضاً القوس الافتتاحي */
 .topics-list li.separator::before {
-  content: '───(';
+  content: '';
   display: inline-block;
   vertical-align: middle;
   color: #666;          /* لون الخط والقوس */
@@ -49,7 +49,7 @@ h1 {
 
 /* بعد النص: القوس الإغلاق والخط */
 .topics-list li.separator::after {
-  content: ')───';
+  content: '';
   display: inline-block;
   vertical-align: middle;
   color: #666;          /* لون الخط والقوس */
