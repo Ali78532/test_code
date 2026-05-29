@@ -1,23 +1,289 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>اللفظ</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>مغامرات كيان المتكلم</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* شاشة اللعبة الخلفية بملء الشاشة */
+        #game-screen {
+            flex-grow: 1;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+            transition: background-image 0.2s ease-in-out, filter 0.5s ease;
+        }
+
+        .sleep-filter {
+            filter: brightness(0.3) contrast(0.8);
+        }
+
+        /* حاوية العناصر السفلية */
+        #bottom-ui {
+            display: flex;
+            flex-direction: column;
+            background-color: #1a1a1a;
+            border-top: 2px solid #2d2d2d;
+            z-index: 10;
+        }
+
+        /* شريط التنقل بين الغرف */
+        #control-bar {
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            padding: 15px 0;
+        }
+
+        .control-btn {
+            background-color: #252525;
+            border: 2px solid #383838;
+            border-radius: 50%;
+            font-size: 2.5rem;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            transition: transform 0.1s, background-color 0.2s;
+        }
+
+        .control-btn:active {
+            transform: scale(0.85);
+            background-color: #444;
+        }
+
+        .active-btn {
+            border-color: #00a2ff;
+            background-color: #2c3e50;
+        }
+
+        /* شريط مؤشرات الاحتياجات (بدون الأيقونات المكررة) */
+        #status-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 10px 20px 10px;
+            background-color: #151515;
+            border-top: 1px solid #222;
+        }
+
+        .stat-box {
+            width: 22%;
+        }
+
+        .progress-bg {
+            width: 100%;
+            background-color: #333;
+            height: 14px; /* جعلتها أسمك قليلاً لتعويض حذف الأيقونات */
+            border-radius: 7px;
+            overflow: hidden;
+            border: 1px solid #444;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 100%;
+            background-color: #4CAF50;
+            /* تسريع الاستجابة الحركية لتبدو الزيادة سلسة */
+            transition: width 0.1s linear, background-color 0.3s;
+        }
+    </style>
 </head>
 <body>
-  <div id="menu">
-    <h1>لفظ الانشاءات</h1>
-    <ul id="topics-list" class="topics-list">
-      <!-- تُملأ ديناميكيًا -->
-    </ul>
-  </div>
 
-  <div id="content-area" class="hidden"></div>
+    <!-- شاشة اللعبة: النقر هنا يبدأ الفعل أو يقطعه -->
+    <div id="game-screen" onclick="triggerAction()"></div>
 
-  <footer>إعداد الأستاذ علي حسين</footer>
+    <!-- واجهة المستخدم السفلية -->
+    <div id="bottom-ui">
+        <div id="control-bar">
+            <button id="btn-pepsi" class="control-btn" onclick="changeRoom('pepsi')">🥤</button>
+            <button id="btn-food" class="control-btn" onclick="changeRoom('food')">🍕</button>
+            <button id="btn-toilet" class="control-btn" onclick="changeRoom('toilet')">🚽</button>
+            <button id="btn-sleep" class="control-btn" onclick="changeRoom('sleep')">🛏️</button>
+        </div>
 
-  <script src="script.js"></script>
+        <div id="status-bar">
+            <div class="stat-box">
+                <div class="progress-bg"><div id="fill-pepsi" class="progress-fill"></div></div>
+            </div>
+            <div class="stat-box">
+                <div class="progress-bg"><div id="fill-food" class="progress-fill"></div></div>
+            </div>
+            <div class="stat-box">
+                <div class="progress-bg"><div id="fill-toilet" class="progress-fill"></div></div>
+            </div>
+            <div class="stat-box">
+                <div class="progress-bg"><div id="fill-sleep" class="progress-fill"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ملفات الصوت للأنشطة -->
+    <audio id="sound-pepsi" src="pepsi.mp3"></audio>
+    <audio id="sound-food" src="food.mp3"></audio>
+    <audio id="sound-toilet" src="toilet.mp3"></audio>
+    <audio id="sound-sleep" src="sleep.mp3"></audio>
+
+    <!-- ملفات صوت المقاطعة (البكاء أو قول "ليش") -->
+    <audio id="sound-interrupt-1" src="1.m4a"></audio>
+    <audio id="sound-interrupt-2" src="2.m4a"></audio>
+
+    <script>
+        const roomImages = {
+            pepsi: { 1: 'pepsi_awake.jpg', 2: 'pepsi_drinking.jpg' },
+            food: { 1: 'food_awake.jpg', 2: 'food_eating.jpg' },
+            toilet: { 1: 'toilet_waiting.jpg', 2: 'toilet_using.jpg' },
+            sleep: { 1: 'sleep_awake.jpg', 2: 'sleep_sleeping.jpg' }
+        };
+
+        let stats = { pepsi: 100, food: 100, toilet: 100, sleep: 100 };
+        let currentRoom = 'pepsi'; 
+        let isExecutingAction = false;
+        let actionInterval; // العداد المسؤول عن زيادة الشريط التدريجية
+        let interruptToggle = 1; // للتبديل بين الصوتين 1 و 2
+
+        const screen = document.getElementById('game-screen');
+
+        function updateUI(stateNum = 1) {
+            const imgPath = roomImages[currentRoom][stateNum];
+            screen.style.backgroundImage = `url('${imgPath}')`;
+
+            for (let key in stats) {
+                const fillElement = document.getElementById(`fill-${key}`);
+                fillElement.style.width = stats[key] + '%';
+                fillElement.style.backgroundColor = stats[key] < 30 ? '#ff3333' : '#4CAF50';
+            }
+
+            document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active-btn'));
+            document.getElementById(`btn-${currentRoom}`).classList.add('active-btn');
+        }
+
+        // تغيير الغرفة (غير مسموح أثناء قيام كيان بفعل معين)
+        function changeRoom(room) {
+            if (isExecutingAction) return; 
+
+            currentRoom = room;
+            updateUI(1); 
+        }
+
+        // بدء الفعل (شرب، أكل، نوم، حمام)
+        function startAction() {
+            if (stats[currentRoom] >= 100) return; // إذا كان ممتلئاً لا تفعل شيئاً
+
+            isExecutingAction = true;
+            stopAllSounds();
+
+            // تشغيل الصوت وجعله يتكرر طالما العملية مستمرة
+            let activeSound = document.getElementById(`sound-${currentRoom}`);
+            activeSound.loop = true; 
+            activeSound.play();
+
+            if (currentRoom === 'sleep') {
+                screen.classList.add('sleep-filter');
+            }
+
+            updateUI(2); 
+
+            // زيادة الشريط تدريجياً كل 100 جزء من الثانية
+            actionInterval = setInterval(() => {
+                stats[currentRoom] += 2; // سرعة تعبئة الشريط
+                
+                // إذا اكتمل الشريط
+                if (stats[currentRoom] >= 100) {
+                    stats[currentRoom] = 100;
+                    stopAction(true); // إنهاء العملية بنجاح
+                }
+                
+                updateUI(2); 
+            }, 100);
+        }
+
+        // إيقاف الفعل (سواء اكتمل أو تمت مقاطعته)
+        function stopAction(completedSuccessfully) {
+            isExecutingAction = false;
+            clearInterval(actionInterval);
+            
+            // إيقاف تكرار الصوت الأصلي
+            let activeSound = document.getElementById(`sound-${currentRoom}`);
+            activeSound.loop = false;
+            stopAllSounds();
+
+            screen.classList.remove('sleep-filter');
+
+            if (!completedSuccessfully) {
+                // إذا تم إيقافه قبل أن يمتلئ (المقاطعة)
+                let interruptSound = document.getElementById(`sound-interrupt-${interruptToggle}`);
+                interruptSound.play();
+                
+                // التبديل للمرة القادمة (إذا كان 1 يصبح 2، وإذا كان 2 يصبح 1)
+                interruptToggle = interruptToggle === 1 ? 2 : 1;
+            }
+
+            updateUI(1);
+        }
+
+        // المعالج الرئيسي عند النقر على شاشة كيان
+        function triggerAction() {
+            if (isExecutingAction) {
+                // المستخدم ضغط لإنهاء العملية قبل أن تكتمل
+                stopAction(false); 
+            } else {
+                // المستخدم ضغط للبدء
+                startAction(); 
+            }
+        }
+
+        function stopAllSounds() {
+            ['pepsi', 'food', 'toilet', 'sleep'].forEach(id => {
+                const audio = document.getElementById(`sound-${id}`);
+                audio.pause();
+                audio.currentTime = 0;
+            });
+            document.getElementById('sound-interrupt-1').pause();
+            document.getElementById('sound-interrupt-1').currentTime = 0;
+            document.getElementById('sound-interrupt-2').pause();
+            document.getElementById('sound-interrupt-2').currentTime = 0;
+        }
+
+        // التناقص التلقائي للاحتياجات كل ثانيتين (لا يتناقص إذا كان كيان يقوم بفعل حالياً)
+        setInterval(() => {
+            if (!isExecutingAction) {
+                stats.pepsi = Math.max(0, stats.pepsi - 2);
+                stats.food = Math.max(0, stats.food - 1.5);
+                stats.toilet = Math.max(0, stats.toilet - 1);
+                stats.sleep = Math.max(0, stats.sleep - 1);
+
+                // تنبيه صوتي للبيبسي إذا نزل عن 20
+                if (stats.pepsi === 20 && currentRoom !== 'pepsi') {
+                    stopAllSounds();
+                    document.getElementById('sound-pepsi').play();
+                }
+                updateUI(1);
+            }
+        }, 2000);
+
+        updateUI(1);
+    </script>
 </body>
 </html>
